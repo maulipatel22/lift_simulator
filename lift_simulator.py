@@ -2,6 +2,8 @@ import random
 import time
 import threading
 import signal
+import pygame
+
 
 
 class Lift:
@@ -15,10 +17,28 @@ class Lift:
         self.up_timestamp = [None] * self.NUM_FLOORS
         self.down_timestamp = [None] * self.NUM_FLOORS
         self.exit = False
+        self.WIDTH = 800
+        self.HEIGHT = 600
+        self.WHITE = (255, 255, 255)
         # 0 -> no request
         # 1 -> up
         # 2 -> down
         # 3 -> both
+
+
+        pygame.init()
+
+        self.open_img = pygame.image.load('intro_image.png')
+        self.open_img = pygame.transform.scale(self.open_img, (self.WIDTH, self.HEIGHT))
+
+        self.bg = pygame.image.load('bg_image.png')
+        self.bg = pygame.transform.scale(self.bg, (800, 600))
+
+        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+        pygame.display.set_caption('Lift Simulator')
+
+
+
 
     def scan_request(self, random_floor):
         # Produce a random floor request with random direction.
@@ -38,11 +58,16 @@ class Lift:
             elif self.floor_requests[random_floor] == 2 and (random_button == 1 or random_button == 3):
                 self.floor_requests[random_floor] = 3
 
-        print(f"Request at floor {random_floor} in dir {random_button}.")
+        #print(f"Request at floor {random_floor} in dir {random_button}.")
 
     def lift_movement(self):
         # Main function that controls the life movement. It scans for a floor request from any floor.
+        #self.reset_screen()
+
         while not self.exit:
+
+            self.set_base_screen()
+
             self.find_destination_on_floor_requests()
             if self.floor_requests.count(0) == self.NUM_FLOORS and self.buttons_pressed.count(True) == 0:
                 # No new request
@@ -53,21 +78,22 @@ class Lift:
                 self.move_lift()
                 if self.buttons_pressed[self.current_pos]:  # Passenger dropped based on button request
                     self.buttons_pressed[self.current_pos] = False
-                    print(f"Passenger Dropped at floor: {self.current_pos}")
+                    #print(f"Passenger Dropped at floor: {self.current_pos}")
 
                 if (self.direction == 1 and (
                         self.floor_requests[self.current_pos] == 1 or self.floor_requests[self.current_pos] == 3)):
                     self.button_request()  # it should allow only up direction button request
                     self.find_destination_on_button_requests()
-                    print(f"Passenger picked up at floor: {self.current_pos} for destination: {self.destination}")
+                    #print(f"Passenger picked up at floor: {self.current_pos} for destination: {self.destination}")
 
                 elif (self.direction == 2 and (
                         self.floor_requests[self.current_pos] == 2 or self.floor_requests[self.current_pos] == 3)):
                     self.button_request()  # it should allow only down direction button request
                     self.find_destination_on_button_requests()
-                    print(f"Passenger picked up at floor: {self.current_pos} for destination: {self.destination}")
+                    #print(f"Passenger picked up at floor: {self.current_pos} for destination: {self.destination}")
                 if self.destination == self.current_pos:
                     self.direction = 0
+        pygame.display.update()
         return
 
 
@@ -113,9 +139,9 @@ class Lift:
         if self.floor_requests[self.current_pos] > 0:
             self.buttons_pressed[random_floor] = True
             self.floor_requests[self.current_pos] -= self.direction
-            print(f"button request for floor {random_floor}")
+            #print(f"button request for floor {random_floor}")
         else:
-            print(f"BUG: button_request on floor with no pending floor_request") 
+            print(f"BUG: button_request on floor with no pending floor_request")
         return
 
     def find_farthest_floor_from_current_lift_position(self):
@@ -153,7 +179,7 @@ class Lift:
             # allow to raise button request. Based on the button request, set the destination.
             self.button_request()
             self.find_destination_on_button_requests()
-            print(f"Passenger picked up at floor: {self.current_pos} for destination: {self.destination}")
+            #print(f"Passenger picked up at floor: {self.current_pos} for destination: {self.destination}")
         elif destination > self.current_pos:
             self.direction = 1
             self.destination = destination
@@ -171,14 +197,14 @@ class Lift:
                 else:
                     self.direction = 1
                     self.current_pos += 1
-                    print(f"Reversing lift direction to up. Current pos: {self.current_pos}")
+                    #print(f"Reversing lift direction to up. Current pos: {self.current_pos}")
             else:
                 if self.floor_requests.count(0) == self.NUM_FLOORS and self.buttons_pressed.count(True) == 0:
                     self.direction = 0
                 else:
                     self.direction = 2
                     self.current_pos -= 1
-                    print(f"Reversing lift direction to down. Current pos: {self.current_pos}")
+                    #print(f"Reversing lift direction to down. Current pos: {self.current_pos}")
         else:
             if self.direction == 1:
                 self.current_pos += 1
@@ -188,7 +214,7 @@ class Lift:
                 self.current_pos -= 1
                 if self.current_pos == 0:
                     self.direction = 1
-        print(f"Moving lift Direction: {self.direction} and Current_Position: {self.current_pos}, destination: {self.destination}")
+        #print(f"Moving lift Direction: {self.direction} and Current_Position: {self.current_pos}, destination: {self.destination}")
         button_pressed_index_list = [] # list of the floors pressed in the lift
         flr_requests = {}
         for index in range(self.NUM_FLOORS):
@@ -196,7 +222,7 @@ class Lift:
                 button_pressed_index_list.append(index)
             if self.floor_requests[index] != 0:
                 flr_requests[index] = self.floor_requests[index]
-        print(f"Drop off locations: {button_pressed_index_list} Floor Requests: {flr_requests}")
+        #print(f"Drop off locations: {button_pressed_index_list} Floor Requests: {flr_requests}")
         time.sleep(2)
 
     def find_destination_on_button_requests(self):
@@ -206,7 +232,7 @@ class Lift:
         max_distance = -1
         destination = self.current_pos
         if self.direction == 0:
-            print(f"something wrong, directon should not be 0 here.")
+            #print(f"something wrong, direction should not be 0 here.")
             start_floor = 0
             end_floor = self.NUM_FLOORS
         elif self.direction == 1:
@@ -237,8 +263,48 @@ class Lift:
                 self.direction = 0
         return
     def exit_lift_operation(self, signum, frame):
-        print(f"Received keyboard interrupt, exiting lift opration...")
+        #print(f"Received keyboard interrupt, exiting lift operation...")
         self.exit = True
+
+
+    def draw_text(self, screen, msg, x, y, fsize, color):
+        font = pygame.font.Font(None, fsize)
+        text = font.render(msg, 1, color)
+        text_rect = text.get_rect(center=(x, y))
+        screen.blit(text, text_rect)
+        pygame.display.update()
+
+
+    def reset_screen(self):
+        self.screen.blit(self.bg, (0, 0))
+
+        pygame.display.update()
+        time.sleep(1)
+
+    def set_base_screen(self):
+
+        print(self.current_pos)
+        """self.screen.blit(self.bg, (0, 0))
+        pygame.display.update()
+        time.sleep(1)"""
+        #self.screen.fill((0, 0, 0))
+        self.screen.blit(self.bg, (0, 0))
+        time.sleep(2)
+        self.draw_text(self.screen, "Current Floor: ",150, 250, 28, self.WHITE)
+        self.draw_text(self.screen, f"{self.current_pos}",260, 250, 28, self.WHITE)
+        self.draw_text(self.screen, "Current Direction: ",150, 280, 28, self.WHITE)
+        self.draw_text(self.screen, f"{self.direction}",260, 280, 28, self.WHITE)
+        self.draw_text(self.screen, "Current Destination: ", 150, 310, 28, self.WHITE)
+        self.draw_text(self.screen, f"{self.destination}", 260, 310, 28, self.WHITE)
+        pygame.display.update()
+
+
+
+
+
+
+
+
 
 class Floor:
     def __init__(self, floor_number):
@@ -261,9 +327,9 @@ for floor_num in range(lift.NUM_FLOORS):
 
 lift.lift_movement()
 for thr in threads:
-    print(f"Gracefully exiting thread...")
+    #print(f"Gracefully exiting thread...")
     thr.join()
-print(f"Existing life operation...")
+#print(f"Existing life operation...")
 
 
 
