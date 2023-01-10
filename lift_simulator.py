@@ -61,7 +61,6 @@ class Lift:
 
     def lift_movement(self):
         # Main function that controls the life movement. It scans for a floor request from any floor.
-        # self.reset_screen()
         self.screen.fill(self.BLACK)
         self.set_base_screen_right()
         pygame.display.update()
@@ -77,21 +76,46 @@ class Lift:
 
             if self.direction:
                 self.move_lift()
+                dropped = False
+                pick_up = False
                 if self.buttons_pressed[self.current_pos]:  # Passenger dropped based on button request
                     self.buttons_pressed[self.current_pos] = False
+                    dropped = True
                     # print(f"Passenger Dropped at floor: {self.current_pos}")
 
                 if (self.direction == 1 and (
                         self.floor_requests[self.current_pos] == 1 or self.floor_requests[self.current_pos] == 3)):
                     self.button_request()  # it should allow only up direction button request
                     self.find_destination_on_button_requests()
+                    pick_up = True
                     # print(f"Passenger picked up at floor: {self.current_pos} for destination: {self.destination}")
 
                 elif (self.direction == 2 and (
                         self.floor_requests[self.current_pos] == 2 or self.floor_requests[self.current_pos] == 3)):
                     self.button_request()  # it should allow only down direction button request
                     self.find_destination_on_button_requests()
+                    pick_up = True
                     # print(f"Passenger picked up at floor: {self.current_pos} for destination: {self.destination}")
+
+                if dropped and pick_up == True:
+                    self.draw_text(self.screen, "Passenger Picked Up and Dropped!", 430,
+                                   int(50 + (50 * (10 - self.current_pos))), 26,
+                                   self.ORANGE)
+                    pygame.display.update()
+                    time.sleep(1)
+
+                elif dropped == True:
+                    self.draw_text(self.screen, "Passenger Dropped!", 430,
+                                   int(50 + (50 * (10 - self.current_pos))), 26,
+                                   self.ORANGE)
+                    pygame.display.update()
+                    time.sleep(1)
+                elif pick_up == True:
+                    self.draw_text(self.screen, "Passenger Picked!", 430,
+                                   int(50 + (50 * (10 - self.current_pos))), 26,
+                                   self.ORANGE)
+                    pygame.display.update()
+                    time.sleep(1)
                 if self.destination == self.current_pos:
                     self.direction = 0
 
@@ -227,7 +251,6 @@ class Lift:
         pygame.display.update()
         time.sleep(1)
 
-
     def find_destination_on_button_requests(self):
         # Iterate through button requests list and find out distance from cur pos at each floor number.
         # Whichever is farthest floor in the direction of life movement from current lift position,
@@ -281,11 +304,17 @@ class Lift:
     def set_base_screen_right(self):
 
         print(self.current_pos)
-
+        self.draw_text(self.screen, "LIFT SIMULATOR", 450, 25, 40, self.ORANGE)
         self.draw_text(self.screen, "Current Floor: ", 650, 75, 28, self.WHITE)
         self.draw_text(self.screen, f"{self.current_pos}", 760, 75, 28, self.WHITE)
         self.draw_text(self.screen, "Current Direction: ", 650, 105, 28, self.WHITE)
-        self.draw_text(self.screen, f"{self.direction}", 760, 105, 28, self.WHITE)
+        if self.direction == 1:
+            DIRECTION = "UP"
+        elif self.direction == 2:
+            DIRECTION = "DOWN"
+        else:
+            DIRECTION = "NONE"
+        self.draw_text(self.screen, f"{DIRECTION}", 765, 105, 28, self.WHITE)
         self.draw_text(self.screen, "Current Destination: ", 650, 135, 28, self.WHITE)
         self.draw_text(self.screen, f"{self.destination}", 760, 135, 28, self.WHITE)
         self.update_buttons()
@@ -296,9 +325,6 @@ class Lift:
 
     def update_buttons(self):
 
-        #
-
-        #self.screen.blit(self.bg, (0, 0))
         pygame.draw.line(self.screen, self.WHITE, (255, 25), (255, 575), 3)
         for level in range(self.NUM_FLOORS):
             y_corr = int(50 + (50 * (10 - level)))
@@ -315,35 +341,27 @@ class Lift:
                 self.draw_text(self.screen, f"{button}", 140, y_corr, 23, self.ORANGE)
 
 
-            #if level == self.current_pos:
-             #   pygame.draw.rect(self.screen, self.GREY, pygame.Rect(250, y_corr-10, 10, 20))
-
         pygame.draw.rect(self.screen, self.GREY, pygame.Rect(315, 50 + (50 * (10 - self.current_pos)) - 15, 20, 35))
 
-
-        #
 
         for button in range(3):
             pygame.draw.circle(self.screen, (255, 255, 255), [585 + (button * 75), 300], 20, 0)
             pygame.draw.circle(self.screen, (255, 255, 255), [585 + (button * 75), 375], 20, 0)
             pygame.draw.circle(self.screen, (255, 255, 255), [585 + (button * 75), 450], 20, 0)
-
+        pygame.draw.circle(self.screen, (255, 255, 255), [585, 525], 20, 0)
+        pygame.draw.circle(self.screen, (255, 255, 255), [660, 525], 20, 0)
 
         y_ = 0
         for button_number in range(0, 7, 3):
             button = 0
             while button != 3:
-                #time.sleep(3)
-                #print(self.buttons_pressed)
-                #print(button_number+button)
                 if self.buttons_pressed[button_number+button]:
                     self.draw_text(self.screen, f"{button_number+button}", 585 + (button * 75), (300+(y_*75)), 28, self.ORANGE)
                 else:
                     self.draw_text(self.screen, f"{button_number+button}", 585 + (button * 75), (300+(y_*75)), 28, self.BLACK)
                 button += 1
             y_ += 1
-        pygame.draw.circle(self.screen, (255, 255, 255), [585, 525], 20, 0)
-        pygame.draw.circle(self.screen, (255, 255, 255), [660, 525], 20, 0)
+
 
         if self.buttons_pressed[9]:
             self.draw_text(self.screen, "9", 585, 525, 28, self.ORANGE)
