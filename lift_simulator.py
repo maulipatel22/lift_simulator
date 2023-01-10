@@ -21,6 +21,10 @@ class Lift:
         self.WHITE = (255, 255, 255)
         self.ORANGE = (255, 127, 80)
         self.BLACK = (0, 0, 0)
+        self.GREY = (192,192,192)
+        self.up_arrow = "↑"
+        self.down_arrow = "↓"
+        self.both_arrow = "⇅"
 
         # 0 -> no request
         # 1 -> up
@@ -64,7 +68,7 @@ class Lift:
 
         while not self.exit:
 
-            self.set_base_screen()
+            self.set_base_screen_right()
 
             self.find_destination_on_floor_requests()
             if self.floor_requests.count(0) == self.NUM_FLOORS and self.buttons_pressed.count(True) == 0:
@@ -219,7 +223,7 @@ class Lift:
             if self.floor_requests[index] != 0:
                 flr_requests[index] = self.floor_requests[index]
         # print(f"Drop off locations: {button_pressed_index_list} Floor Requests: {flr_requests}")
-        time.sleep(2)
+        time.sleep(1)
 
     def find_destination_on_button_requests(self):
         # Iterate through button requests list and find out distance from cur pos at each floor number.
@@ -276,15 +280,12 @@ class Lift:
         pygame.display.update()
         time.sleep(1)
 
-    def set_base_screen(self):
+    def set_base_screen_right(self):
 
         print(self.current_pos)
-        """self.screen.blit(self.bg, (0, 0))
-        pygame.display.update()
-        time.sleep(1)"""
-        # self.screen.fill((0, 0, 0))
         self.screen.blit(self.bg, (0, 0))
         time.sleep(2)
+
         self.draw_text(self.screen, "Current Floor: ", 550, 75, 28, self.WHITE)
         self.draw_text(self.screen, f"{self.current_pos}", 660, 75, 28, self.WHITE)
         self.draw_text(self.screen, "Current Direction: ", 550, 105, 28, self.WHITE)
@@ -292,9 +293,49 @@ class Lift:
         self.draw_text(self.screen, "Current Destination: ", 550, 135, 28, self.WHITE)
         self.draw_text(self.screen, f"{self.destination}", 660, 135, 28, self.WHITE)
         self.update_buttons()
+        time.sleep(2)
+
         pygame.display.update()
 
+
+    def set_base_screen_left(self):
+
+        self.screen.blit(self.bg, (0, 0))
+        pygame.draw.line(self.screen, self.WHITE, (190, 50), (190, 550), 3)
+        for level in range(self.NUM_FLOORS):
+            y_corr = int(50+(50*level))
+            print()
+            pygame.draw.line(self.screen, self.WHITE, (140, y_corr), (240, y_corr), 2)
+            self.draw_text(self.screen, f"{level}",130, y_corr, 20, self.WHITE)
+
     def update_buttons(self):
+
+        #
+
+        #self.screen.blit(self.bg, (0, 0))
+        pygame.draw.line(self.screen, self.WHITE, (190, 50), (190, 550), 3)
+        for level in range(self.NUM_FLOORS):
+            y_corr = int(50 + (50 * level))
+            print()
+            pygame.draw.line(self.screen, self.WHITE, (140, y_corr), (240, y_corr), 2)
+            self.draw_text(self.screen, f"{level}", 130, y_corr, 25, self.WHITE)
+            if self.floor_requests[level] != 0:
+                if self.floor_requests[level] == 1:
+                    button = "UP"
+                elif self.floor_requests[level] == 2:
+                    button = "DOWN"
+                elif self.floor_requests[level] == 3:
+                    button = "BOTH"
+                self.draw_text(self.screen, f"{button}", 95, y_corr, 23, self.ORANGE)
+
+
+            #if level == self.current_pos:
+             #   pygame.draw.rect(self.screen, self.GREY, pygame.Rect(250, y_corr-10, 10, 20))
+
+        pygame.draw.rect(self.screen, self.GREY, pygame.Rect(250, 50 + (50 * self.current_pos) - 15, 20, 35))
+
+
+        #
 
         for button in range(3):
             pygame.draw.circle(self.screen, (255, 255, 255), [485 + (button * 105), 300], 30, 0)
@@ -337,7 +378,7 @@ class Floor:
 
     def raise_request(self):
         while not lift.exit:
-            waiting_time = random.randint(10, 300)
+            waiting_time = random.randint(5, 15)
             time.sleep(waiting_time)
             lift.scan_request(self.floor_number)
         return
